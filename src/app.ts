@@ -1,18 +1,36 @@
-import express from 'express';
+import express from "express";
+import router from "./modules/tasks/tasks.routes.js";
 
 const app = express();
-const port = 3000;
 
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('Hello ESM World');
+app.use("/tasks", router);
+
+app.use((err: any, req: any, res: any, next: any) => {
+  if (err.status) {
+    return res.status(err.status).json({
+      error: {
+        message: err.message,
+      },
+    });
+  }
+
+  console.error(err);
+
+  res.status(500).json({
+    error: {
+      message: "Internal Server Error",
+    },
+  });
 });
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.use((req, res) => {
+  res.status(404).json({
+    error: {
+      message: "Route not found",
+    },
+  });
 });
 
-app.get('/health', (req, res) => {
-  res.send('All good')
-})
+export default app;
