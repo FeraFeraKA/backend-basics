@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { TaskService } from "./tasks.service.js";
+import { createTaskSchema, updateTaskSchema } from "./tasks.schema.js";
 
 export const TaskController = {
   list(req: Request, res: Response) {
@@ -16,7 +17,7 @@ export const TaskController = {
   },
 
   create(req: Request, res: Response) {
-    const { title, text } = req.body;
+    const { title, text } = createTaskSchema.parse(req.body);
 
     const task = TaskService.create({ title, text });
 
@@ -26,7 +27,13 @@ export const TaskController = {
   update(req: Request<{ id: string }>, res: Response) {
     const { id } = req.params;
 
-    const task = TaskService.update(id, req.body);
+    const parsed = updateTaskSchema.parse(req.body);
+
+    const data = Object.fromEntries(
+      Object.entries(parsed).filter(([, value]) => value !== undefined),
+    );
+
+    const task = TaskService.update(id, data);
 
     res.json(task);
   },
@@ -34,7 +41,7 @@ export const TaskController = {
   remove(req: Request<{ id: string }>, res: Response) {
     const { id } = req.params;
 
-    const task = TaskService.remove(id);
+    TaskService.remove(id);
 
     res.status(204).send();
   },

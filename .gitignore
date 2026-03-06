@@ -29,3 +29,6 @@ Thumbs.db
 
 # coverage
 coverage/
+
+# Postman
+.postman
