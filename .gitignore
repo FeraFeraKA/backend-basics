@@ -32,3 +32,4 @@ coverage/
 
 # Postman
 .postman
+/src/generated/prisma

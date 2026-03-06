@@ -1,36 +1,37 @@
-import type { Task } from "./tasks.types.js";
-
-const tasks = new Map<string, Task>();
+import type { Task, TaskStatus } from "./tasks.types.js";
+import { prisma } from "../../shared/db/prisma.js";
 
 export const TaskStorage = {
-  list(): Task[] {
-    return Array.from(tasks.values());
+  async list(): Promise<Task[]> {
+    return prisma.task.findMany();
   },
 
-  get(id: string): Task | undefined {
-    return tasks.get(id);
+  async get(id: string): Promise<Task | null> {
+    return prisma.task.findUnique({
+      where: { id },
+    });
   },
 
-  create(task: Task) {
-    tasks.set(task.id, task);
-    return task;
+  async create(data: {
+    title: string;
+    text: string;
+    status: TaskStatus;
+  }): Promise<Task> {
+    return prisma.task.create({
+      data,
+    });
   },
 
-  update(id: string, patch: Partial<Task>): Task | undefined {
-    const existing = tasks.get(id);
-    if (!existing) return undefined;
-
-    const updated: Task = {
-      ...existing,
-      ...patch,
-      updatedAt: new Date().toISOString(),
-    };
-
-    tasks.set(id, updated);
-    return updated;
+  async update(id: string, data: Partial<Task>): Promise<Task> {
+    return prisma.task.update({
+      where: { id },
+      data,
+    });
   },
 
-  remove(id: string): boolean {
-    return tasks.delete(id);
+  async remove(id: string): Promise<Task> {
+    return prisma.task.delete({
+      where: { id },
+    });
   },
 };

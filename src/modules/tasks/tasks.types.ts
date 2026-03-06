@@ -1,16 +1,11 @@
+import type { Task as PrismaTask, TaskStatus as PrismaStatus } from "@prisma/client";
+
 export const TASK_STATUSES = [
-  "todo",
-  "in_progress",
-  "done",
+  "TODO",
+  "DOING",
+  "DONE",
 ] as const;
 
-export type TaskStatus = typeof TASK_STATUSES[number];
+export type TaskStatus = PrismaStatus;
 
-export interface Task {
-  id: string;
-  title: string;
-  text: string;
-  status: TaskStatus;
-  createdAt: string;
-  updatedAt: string;
-}
+export type Task = PrismaTask;

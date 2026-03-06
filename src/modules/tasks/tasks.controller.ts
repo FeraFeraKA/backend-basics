@@ -3,28 +3,28 @@ import { TaskService } from "./tasks.service.js";
 import { createTaskSchema, updateTaskSchema } from "./tasks.schema.js";
 
 export const TaskController = {
-  list(req: Request, res: Response) {
-    const tasks = TaskService.list();
+  async list(req: Request, res: Response) {
+    const tasks = await TaskService.list();
     res.json(tasks);
   },
 
-  get(req: Request<{ id: string }>, res: Response) {
+  async get(req: Request<{ id: string }>, res: Response) {
     const { id } = req.params;
 
-    const task = TaskService.get(id);
+    const task = await TaskService.get(id);
 
     res.json(task);
   },
 
-  create(req: Request, res: Response) {
-    const { title, text } = createTaskSchema.parse(req.body);
+  async create(req: Request, res: Response) {
+    const { title, text, status } = createTaskSchema.parse(req.body);
 
-    const task = TaskService.create({ title, text });
+    const task = await TaskService.create({ title, text, status });
 
     res.status(201).json(task);
   },
 
-  update(req: Request<{ id: string }>, res: Response) {
+  async update(req: Request<{ id: string }>, res: Response) {
     const { id } = req.params;
 
     const parsed = updateTaskSchema.parse(req.body);
@@ -33,15 +33,15 @@ export const TaskController = {
       Object.entries(parsed).filter(([, value]) => value !== undefined),
     );
 
-    const task = TaskService.update(id, data);
+    const task = await TaskService.update(id, data);
 
     res.json(task);
   },
 
-  remove(req: Request<{ id: string }>, res: Response) {
+  async remove(req: Request<{ id: string }>, res: Response) {
     const { id } = req.params;
 
-    TaskService.remove(id);
+    await TaskService.remove(id);
 
     res.status(204).send();
   },

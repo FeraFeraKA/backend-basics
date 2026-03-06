@@ -1,46 +1,37 @@
 import { TaskStorage } from "./tasks.storage.js";
-import type { Task } from "./tasks.types.js";
+import type { Task, TaskStatus } from "./tasks.types.js";
 import { HttpError } from "../../shared/errors/httpError.js";
 
 export const TaskService = {
-  list(): Task[] {
+  list(): Promise<Task[]> {
     return TaskStorage.list();
   },
 
-  get(id: string): Task {
-    const task = TaskStorage.get(id);
+  async get(id: string): Promise<Task> {
+    const task = await TaskStorage.get(id);
 
     if (!task) throw new HttpError(404, "NOT_FOUND", "Task not found");
 
     return task;
   },
 
-  create(data: { title: string; text: string }): Task {
-    const now = new Date().toISOString();
-
-    const task: Task = {
-      id: crypto.randomUUID(),
-      title: data.title,
-      text: data.text,
-      status: "todo",
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    return TaskStorage.create(task);
+  create(data: {
+    title: string;
+    text: string;
+    status: TaskStatus;
+  }): Promise<Task> {
+    return TaskStorage.create(data);
   },
 
-  update(id: string, patch: Partial<Task>) {
-    const task = TaskStorage.update(id, patch);
+  async update(id: string, data: Partial<Task>): Promise<Task> {
+    const task = await TaskStorage.update(id, data);
 
     if (!task) throw new HttpError(404, "NOT_FOUND", "Task not found");
 
     return task;
   },
 
-  remove(id: string) {
-    const removed = TaskStorage.remove(id);
-
-    if (!removed) throw new HttpError(404, "NOT_FOUND", "Task not found");
+  remove(id: string): Promise<Task> {
+    return TaskStorage.remove(id);
   },
 };
