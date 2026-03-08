@@ -2,7 +2,12 @@ import { HttpError } from "../errors/httpError.js";
 import { z, ZodError } from "zod";
 import type { Response, Request, NextFunction } from "express";
 
-export function errorHandler(err: Error, req: Request, res: Response) {
+export function errorHandler(
+  err: Error,
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
   if (err instanceof HttpError) {
     return res.status(err.status).json({
       error: {
@@ -22,7 +27,7 @@ export function errorHandler(err: Error, req: Request, res: Response) {
     });
   }
 
-  console.error(err);
+  console.error(err.stack);
 
   res.status(500).json({
     error: {
@@ -30,6 +35,8 @@ export function errorHandler(err: Error, req: Request, res: Response) {
       message: "Internal Server Error",
     },
   });
+
+  void next;
 }
 
 export function routeHandler(req: Request, res: Response, next: NextFunction) {

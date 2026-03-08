@@ -1,5 +1,6 @@
 import express from "express";
-import router from "./modules/tasks/tasks.routes.js";
+import taskRouter from "./modules/tasks/tasks.routes.js";
+import userRouter from "./modules/users/users.routes.js";
 import {
   errorHandler,
   routeHandler,
@@ -12,7 +13,9 @@ app.use(requestLogger);
 
 app.use(express.json());
 
-app.use("/tasks", router);
+app.use("/tasks", taskRouter);
+
+app.use("/users", userRouter);
 
 app.use(routeHandler);
 

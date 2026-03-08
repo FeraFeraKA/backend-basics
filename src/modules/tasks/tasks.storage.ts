@@ -2,13 +2,15 @@ import type { Task, TaskStatus } from "./tasks.types.js";
 import { prisma } from "../../shared/db/prisma.js";
 
 export const TaskStorage = {
-  async list(): Promise<Task[]> {
-    return prisma.task.findMany();
+  async list(userId: string): Promise<Task[]> {
+    return prisma.task.findMany({
+      where: { userId },
+    });
   },
 
-  async get(id: string): Promise<Task | null> {
-    return prisma.task.findUnique({
-      where: { id },
+  async findById(id: string, userId: string): Promise<Task | null> {
+    return prisma.task.findFirst({
+      where: { id, userId },
     });
   },
 
@@ -16,6 +18,7 @@ export const TaskStorage = {
     title: string;
     text: string;
     status: TaskStatus;
+    userId: string;
   }): Promise<Task> {
     return prisma.task.create({
       data,
