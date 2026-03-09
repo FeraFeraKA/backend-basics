@@ -7,6 +7,12 @@ export const UserStorage = {
     return prisma.user.findMany();
   },
 
+  async findByEmail(email: string) {
+    return prisma.user.findUnique({
+      where: { email },
+    });
+  },
+
   async findById(id: string) {
     return prisma.user.findUnique({
       where: { id },
@@ -19,8 +25,9 @@ export const UserStorage = {
   async create(data: CreateUserInput): Promise<User> {
     return prisma.user.create({
       data: {
-        email: data.email,
         name: data.name ?? null,
+        email: data.email,
+        passwordHash: data.passwordHash,
       },
     });
   },
