@@ -4,7 +4,7 @@ import { createTaskSchema, updateTaskSchema } from "./tasks.schema.js";
 
 export const TaskController = {
   async list(req: Request, res: Response) {
-    const userId = req.user!.id;
+    const userId = req.user.id;
     const tasks = await TaskService.list(userId);
     res.json(tasks);
   },

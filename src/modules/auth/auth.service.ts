@@ -2,18 +2,30 @@ import bcrypt from "bcrypt";
 import { UserStorage } from "../users/users.storage.js";
 import { Prisma } from "@prisma/client";
 import { HttpError } from "../../shared/errors/httpError.js";
+import { signAccessToken } from "../../shared/lib/jwt.js";
 
 const SALT_ROUNDS = 10;
 
 export const AuthService = {
+  async me(userId: string) {
+    const user = await UserStorage.findById(userId);
+
+    if (!user) throw new HttpError(401, "UNAUTHORIZED", "Unauthorized");
+
+    const { passwordHash: removed, ...safeUser } = user;
+    void removed;
+    return safeUser;
+  },
+
   async register(email: string, password: string, name?: string) {
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS);
 
     try {
       const user = await UserStorage.create({ name, email, passwordHash });
+      const token = signAccessToken({ sub: user.id, email: user.email });
       const { passwordHash: removed, ...safeUser } = user;
       void removed;
-      return safeUser;
+      return { token, safeUser };
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -27,7 +39,8 @@ export const AuthService = {
   async login(email: string, password: string) {
     const user = await UserStorage.findByEmail(email);
 
-    if (!user) throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrond credentials");
+    if (!user)
+      throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrond credentials");
 
     const passwordHash = user.passwordHash;
 
@@ -36,8 +49,10 @@ export const AuthService = {
     if (!isValid)
       throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrond credentials");
 
+    const token = signAccessToken({ sub: user.id, email: user.email });
+
     const { passwordHash: removed, ...safeUser } = user;
     void removed;
-    return safeUser;
+    return { token, safeUser };
   },
 };

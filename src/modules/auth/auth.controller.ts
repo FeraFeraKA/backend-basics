@@ -3,6 +3,14 @@ import { loginSchema, registerSchema } from "./auth.schema.js";
 import { AuthService } from "./auth.service.js";
 
 export const AuthController = {
+  async me(req: Request, res: Response) {
+    const userId = req.user.id;
+
+    const user = await AuthService.me(userId);
+
+    res.json(user);
+  },
+
   async register(req: Request, res: Response) {
     const { name, email, password } = registerSchema.parse(req.body);
 

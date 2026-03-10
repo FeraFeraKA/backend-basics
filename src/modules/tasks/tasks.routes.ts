@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { TaskController } from "./tasks.controller.js";
-import { mockAuth } from "../../shared/middleware/mockAuth.js";
+import { authGuard } from "../../shared/middleware/authGuard.js";
 
 const router = Router();
 
-router.use(mockAuth);
+router.use(authGuard);
 
 router.get("/", TaskController.list);
 
