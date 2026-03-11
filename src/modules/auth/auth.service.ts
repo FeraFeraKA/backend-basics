@@ -20,8 +20,7 @@ export const AuthService = {
 
     if (!user) throw new HttpError(401, "UNAUTHORIZED", "Unauthorized");
 
-    const { passwordHash: removed, ...safeUser } = user;
-    void removed;
+    const safeUser = toSafeUser(user);
     return safeUser;
   },
 
@@ -41,8 +40,7 @@ export const AuthService = {
         expiresAt: refreshExpiresAt,
       });
 
-      const { passwordHash: removed, ...safeUser } = user;
-      void removed;
+      const safeUser = toSafeUser(user);
       return { accessToken, refreshToken, user: safeUser };
     } catch (error) {
       if (
@@ -86,9 +84,13 @@ export const AuthService = {
     if (!refreshToken)
       throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
 
-    const payload = verifyRefreshToken(refreshToken);
+    let payload;
 
-    if (!payload) throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+    try {
+      payload = verifyRefreshToken(refreshToken);
+    } catch {
+      throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+    }
 
     const refreshTokenDb = await RefreshTokenStorage.findByToken(refreshToken);
 
@@ -114,5 +116,16 @@ export const AuthService = {
     });
 
     return { accessToken, refreshToken: newRefreshToken };
+  },
+
+  async logout(refreshToken: string) {
+    if (!refreshToken)
+      throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+
+    const refreshTokenDb = await RefreshTokenStorage.findByToken(refreshToken);
+
+    if (refreshTokenDb) await RefreshTokenStorage.deleteByToken(refreshToken);
+
+    return { success: true };
   },
 };

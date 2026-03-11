@@ -16,6 +16,12 @@ export const UserStorage = {
   async findById(id: string) {
     return prisma.user.findUnique({
       where: { id },
+    });
+  },
+
+  async findByIdWithTasks(id: string) {
+    return prisma.user.findUnique({
+      where: { id },
       include: {
         tasks: true,
       },

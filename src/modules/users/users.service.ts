@@ -9,7 +9,7 @@ export const UserService = {
   },
 
   async getTasks(id: string): Promise<Task[]> {
-    const user = await UserStorage.findById(id);
+    const user = await UserStorage.findByIdWithTasks(id);
 
     if (!user) throw new HttpError(404, "NOT_FOUND", "User not found");
 

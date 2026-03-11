@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { loginSchema, registerSchema } from "./auth.schema.js";
 import { AuthService } from "./auth.service.js";
+import { refreshTokenBodySchema } from "../tokens/refreshToken.schema.js";
 
 export const AuthController = {
   async me(req: Request, res: Response) {
@@ -28,10 +29,18 @@ export const AuthController = {
   },
 
   async refresh(req: Request, res: Response) {
-    const { refreshToken } = req.body;
+    const { refreshToken } = refreshTokenBodySchema.parse(req.body);
 
-    const newRefreshToken = await AuthService.refresh(refreshToken);
+    const tokens = await AuthService.refresh(refreshToken);
 
-    res.status(201).json(newRefreshToken);
+    res.status(200).json(tokens);
+  },
+
+  async logout(req: Request, res: Response) {
+    const { refreshToken } = refreshTokenBodySchema.parse(req.body);
+
+    const success = await AuthService.logout(refreshToken);
+
+    res.status(200).json(success);
   },
 };

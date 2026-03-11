@@ -1,7 +1,13 @@
 import { prisma } from "../../shared/db/prisma.js";
 
+type CreateRefreshTokenInput = {
+  userId: string;
+  token: string;
+  expiresAt: Date;
+};
+
 export const RefreshTokenStorage = {
-  async create(data) {
+  async create(data: CreateRefreshTokenInput) {
     return prisma.refreshToken.create({
       data,
     });
