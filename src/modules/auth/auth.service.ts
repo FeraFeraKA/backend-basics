@@ -1,10 +1,18 @@
 import bcrypt from "bcrypt";
 import { UserStorage } from "../users/users.storage.js";
-import { Prisma } from "@prisma/client";
+import { Prisma, type User } from "@prisma/client";
 import { HttpError } from "../../shared/errors/httpError.js";
-import { signAccessToken } from "../../shared/lib/jwt.js";
+import { RefreshTokenStorage } from "../tokens/refreshToken.storage.js";
+import { issueTokens } from "../tokens/issueTokens.js";
+import { verifyRefreshToken } from "../../shared/lib/jwt.js";
 
 const SALT_ROUNDS = 10;
+
+function toSafeUser(user: User) {
+  const { passwordHash, ...safeUser } = user;
+  void passwordHash;
+  return safeUser;
+}
 
 export const AuthService = {
   async me(userId: string) {
@@ -22,10 +30,20 @@ export const AuthService = {
 
     try {
       const user = await UserStorage.create({ name, email, passwordHash });
-      const token = signAccessToken({ sub: user.id, email: user.email });
+      const { accessToken, refreshToken, refreshExpiresAt } = issueTokens({
+        id: user.id,
+        email: user.email,
+      });
+
+      await RefreshTokenStorage.create({
+        userId: user.id,
+        token: refreshToken,
+        expiresAt: refreshExpiresAt,
+      });
+
       const { passwordHash: removed, ...safeUser } = user;
       void removed;
-      return { token, safeUser };
+      return { accessToken, refreshToken, user: safeUser };
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
@@ -40,19 +58,61 @@ export const AuthService = {
     const user = await UserStorage.findByEmail(email);
 
     if (!user)
-      throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrond credentials");
+      throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrong credentials");
 
     const passwordHash = user.passwordHash;
 
     const isValid = await bcrypt.compare(password, passwordHash);
 
     if (!isValid)
-      throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrond credentials");
+      throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrong credentials");
 
-    const token = signAccessToken({ sub: user.id, email: user.email });
+    const { accessToken, refreshToken, refreshExpiresAt } = issueTokens({
+      id: user.id,
+      email: user.email,
+    });
 
-    const { passwordHash: removed, ...safeUser } = user;
-    void removed;
-    return { token, safeUser };
+    await RefreshTokenStorage.create({
+      userId: user.id,
+      token: refreshToken,
+      expiresAt: refreshExpiresAt,
+    });
+
+    const safeUser = toSafeUser(user);
+    return { accessToken, refreshToken, user: safeUser };
+  },
+
+  async refresh(refreshToken: string) {
+    if (!refreshToken)
+      throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+
+    const payload = verifyRefreshToken(refreshToken);
+
+    if (!payload) throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+
+    const refreshTokenDb = await RefreshTokenStorage.findByToken(refreshToken);
+
+    if (!refreshTokenDb)
+      throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+
+    const user = await UserStorage.findById(payload.sub);
+
+    if (!user) throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+
+    await RefreshTokenStorage.deleteByToken(refreshToken);
+
+    const {
+      accessToken,
+      refreshToken: newRefreshToken,
+      refreshExpiresAt,
+    } = issueTokens({ id: payload.sub, email: payload.email });
+
+    await RefreshTokenStorage.create({
+      userId: user.id,
+      token: newRefreshToken,
+      expiresAt: refreshExpiresAt,
+    });
+
+    return { accessToken, refreshToken: newRefreshToken };
   },
 };

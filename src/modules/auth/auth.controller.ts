@@ -26,4 +26,12 @@ export const AuthController = {
 
     res.status(200).json(user);
   },
+
+  async refresh(req: Request, res: Response) {
+    const { refreshToken } = req.body;
+
+    const newRefreshToken = await AuthService.refresh(refreshToken);
+
+    res.status(201).json(newRefreshToken);
+  },
 };
