@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { config } from "../config/env.js";
 
 type JwtPayload = {
   sub: string;
@@ -6,21 +7,21 @@ type JwtPayload = {
 };
 
 export function signAccessToken(payload: JwtPayload) {
-  return jwt.sign(payload, process.env.JWT_ACCESS_SECRET!, {
-    expiresIn: +process.env.JWT_ACCESS_EXPIRES_IN!,
+  return jwt.sign(payload, config.jwtAccessSecret, {
+    expiresIn: config.jwtAccessExpiresIn,
   });
 }
 
 export function signRefreshToken(payload: JwtPayload) {
-  return jwt.sign(payload, process.env.JWT_REFRESH_SECRET!, {
-    expiresIn: +process.env.JWT_REFRESH_EXPIRES_IN!,
+  return jwt.sign(payload, config.jwtRefreshSecret, {
+    expiresIn: config.jwtRefreshExpiresIn,
   });
 }
 
 export function verifyAccessToken(token: string): JwtPayload {
-  return jwt.verify(token, process.env.JWT_ACCESS_SECRET!) as JwtPayload;
+  return jwt.verify(token, config.jwtAccessSecret) as JwtPayload;
 }
 
 export function verifyRefreshToken(token: string): JwtPayload {
-  return jwt.verify(token, process.env.JWT_REFRESH_SECRET!) as JwtPayload;
+  return jwt.verify(token, config.jwtRefreshSecret) as JwtPayload;
 }
