@@ -2,10 +2,11 @@ import { Prisma, type Task, type User } from "@prisma/client";
 import { UserStorage } from "./users.storage.js";
 import { HttpError } from "../../shared/errors/httpError.js";
 import type { CreateUserInput } from "./users.schema.js";
+import { toSafeUser } from "../../shared/mappers/user.mapper.js";
 
 export const UserService = {
-  list(): Promise<User[]> {
-    return UserStorage.list();
+  async list() {
+    return (await UserStorage.list()).map((user) => toSafeUser(user));
   },
 
   async getTasks(id: string): Promise<Task[]> {
@@ -16,12 +17,12 @@ export const UserService = {
     return user.tasks;
   },
 
-  async getUser(id: string): Promise<User> {
+  async getUser(id: string) {
     const user = await UserStorage.findById(id);
 
     if (!user) throw new HttpError(404, "NOT_FOUND", "User not found");
 
-    return user;
+    return toSafeUser(user);
   },
 
   async create(data: CreateUserInput): Promise<User> {

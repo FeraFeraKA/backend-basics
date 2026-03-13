@@ -1,18 +1,13 @@
 import bcrypt from "bcrypt";
 import { UserStorage } from "../users/users.storage.js";
-import { Prisma, type User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 import { HttpError } from "../../shared/errors/httpError.js";
 import { RefreshTokenStorage } from "../tokens/refreshToken.storage.js";
 import { issueTokens } from "../tokens/issueTokens.js";
 import { verifyRefreshToken } from "../../shared/lib/jwt.js";
+import { toSafeUser } from "../../shared/mappers/user.mapper.js";
 
 const SALT_ROUNDS = 10;
-
-function toSafeUser(user: User) {
-  const { passwordHash, ...safeUser } = user;
-  void passwordHash;
-  return safeUser;
-}
 
 export const AuthService = {
   async me(userId: string) {
