@@ -11,8 +11,12 @@ import { config } from "./shared/config/env.js";
 import cors from "cors";
 import helmet from "helmet";
 import { authLimiter } from "./shared/middleware/rateLimit.js";
+import swaggerUi from "swagger-ui-express";
+import { swaggerSpec } from "./shared/config/swagger.js";
 
 const app = express();
+
+app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(requestLogger);
 
