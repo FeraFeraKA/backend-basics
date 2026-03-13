@@ -1,4 +1,4 @@
-import { Prisma, type Task, type User } from "@prisma/client";
+import { Prisma, type Task } from "@prisma/client";
 import { UserStorage } from "./users.storage.js";
 import { HttpError } from "../../shared/errors/httpError.js";
 import type { CreateUserInput } from "./users.schema.js";
@@ -25,9 +25,9 @@ export const UserService = {
     return toSafeUser(user);
   },
 
-  async create(data: CreateUserInput): Promise<User> {
+  async create(data: CreateUserInput) {
     try {
-      return await UserStorage.create(data);
+      return toSafeUser(await UserStorage.create(data));
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
