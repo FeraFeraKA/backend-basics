@@ -51,14 +51,14 @@ export const AuthService = {
     const user = await UserStorage.findByEmail(email);
 
     if (!user)
-      throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrong credentials");
+      throw new HttpError(401, "INVALID_CREDENTIALS", "Invalid credentials");
 
     const passwordHash = user.passwordHash;
 
     const isValid = await bcrypt.compare(password, passwordHash);
 
     if (!isValid)
-      throw new HttpError(401, "INCORRECT_CREDENTIALS", "Wrong credentials");
+      throw new HttpError(401, "INVALID_CREDENTIALS", "Invalid credentials");
 
     const { accessToken, refreshToken, refreshExpiresAt } = issueTokens({
       id: user.id,
@@ -77,24 +77,24 @@ export const AuthService = {
 
   async refresh(refreshToken: string) {
     if (!refreshToken)
-      throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+      throw new HttpError(401, "INVALID_CREDENTIALS", "Invalid credentials");
 
     let payload;
 
     try {
       payload = verifyRefreshToken(refreshToken);
     } catch {
-      throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+      throw new HttpError(401, "INVALID_TOKEN", "Invalid token");
     }
 
     const refreshTokenDb = await RefreshTokenStorage.findByToken(refreshToken);
 
     if (!refreshTokenDb)
-      throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+      throw new HttpError(401, "INVALID_TOKEN", "Invalid token");
 
     const user = await UserStorage.findById(payload.sub);
 
-    if (!user) throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+    if (!user) throw new HttpError(401, "INVALID_TOKEN", "Invalid token");
 
     await RefreshTokenStorage.deleteByToken(refreshToken);
 
