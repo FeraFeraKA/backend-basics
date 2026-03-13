@@ -10,6 +10,7 @@ import authRouter from "./modules/auth/auth.routes.js";
 import { config } from "./shared/config/env.js";
 import cors from "cors";
 import helmet from "helmet";
+import { authLimiter } from "./shared/middleware/rateLimit.js";
 
 const app = express();
 
@@ -31,7 +32,7 @@ app.use("/tasks", taskRouter);
 
 app.use("/users", userRouter);
 
-app.use("/auth", authRouter);
+app.use("/auth", authLimiter, authRouter);
 
 app.use(routeHandler);
 
