@@ -16,6 +16,10 @@ import { swaggerSpec } from "./shared/config/swagger.js";
 
 const app = express();
 
+app.get("/health", (_req, res) => {
+  res.status(200).json({ status: "ok" });
+});
+
 app.use("/docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.use(requestLogger);
