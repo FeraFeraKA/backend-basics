@@ -1,6 +1,7 @@
 import { HttpError } from "../errors/httpError.js";
 import { z, ZodError } from "zod";
 import type { Response, Request, NextFunction } from "express";
+import { logger } from "../lib/logger.js";
 
 export function errorHandler(
   err: Error,
@@ -9,15 +10,29 @@ export function errorHandler(
   next: NextFunction,
 ) {
   if (err instanceof HttpError) {
+    logger.warn({
+      message: err.message,
+      code: err.code,
+      method: req.method,
+      url: req.originalUrl,
+      userId: req.user?.id,
+    });
+
     return res.status(err.status).json({
       error: {
         code: err.code,
         message: err.message,
       },
     });
-  }
+  } else if (err instanceof ZodError) {
+    logger.warn({
+      message: err.message,
+      code: "VALIDATION_ERROR",
+      method: req.method,
+      url: req.originalUrl,
+      userId: req.user.id,
+    });
 
-  if (err instanceof ZodError) {
     return res.status(400).json({
       error: {
         code: "VALIDATION_ERROR",
@@ -25,16 +40,23 @@ export function errorHandler(
         details: z.treeifyError(err),
       },
     });
-  }
-
-  console.error(err.stack);
-
-  res.status(500).json({
-    error: {
+  } else {
+    logger.error({
+      message: err.message,
       code: "INTERNAL_ERROR",
-      message: "Internal Server Error",
-    },
-  });
+      stack: err.stack,
+      method: req.method,
+      url: req.originalUrl,
+      userId: req.user.id,
+    });
+
+    res.status(500).json({
+      error: {
+        code: "INTERNAL_ERROR",
+        message: "Internal Server Error",
+      },
+    });
+  }
 
   void next;
 }
