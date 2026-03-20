@@ -6,6 +6,7 @@ import { RefreshTokenStorage } from "../tokens/refreshToken.storage.js";
 import { issueTokens } from "../tokens/issueTokens.js";
 import { verifyRefreshToken } from "../../shared/lib/jwt.js";
 import { toSafeUser } from "../../shared/mappers/user.mapper.js";
+import { logger } from "../../shared/lib/logger.js";
 
 const SALT_ROUNDS = 10;
 
@@ -36,13 +37,27 @@ export const AuthService = {
       });
 
       const safeUser = toSafeUser(user);
+
+      logger.info({
+        event: "register_success",
+        userId: user.id,
+        email: user.email,
+      });
+
       return { accessToken, refreshToken, user: safeUser };
     } catch (error) {
       if (
         error instanceof Prisma.PrismaClientKnownRequestError &&
         error.code === "P2002"
-      )
+      ) {
+        logger.warn({
+          event: "register_failed",
+          reason: "EMAIL_TAKEN",
+          email,
+        });
+
         throw new HttpError(409, "EMAIL_TAKEN", "Email already taken");
+      }
       throw error;
     }
   },
@@ -50,15 +65,29 @@ export const AuthService = {
   async login(email: string, password: string) {
     const user = await UserStorage.findByEmail(email);
 
-    if (!user)
+    if (!user) {
+      logger.warn({
+        event: "login_failed",
+        reason: "INVALID_CREDENTIALS",
+        email,
+      });
+
       throw new HttpError(401, "INVALID_CREDENTIALS", "Invalid credentials");
+    }
 
     const passwordHash = user.passwordHash;
 
     const isValid = await bcrypt.compare(password, passwordHash);
 
-    if (!isValid)
+    if (!isValid) {
+      logger.warn({
+        event: "login_failed",
+        reason: "INVALID_CREDENTIALS",
+        email,
+      });
+
       throw new HttpError(401, "INVALID_CREDENTIALS", "Invalid credentials");
+    }
 
     const { accessToken, refreshToken, refreshExpiresAt } = issueTokens({
       id: user.id,
@@ -72,29 +101,61 @@ export const AuthService = {
     });
 
     const safeUser = toSafeUser(user);
+
+    logger.info({
+      event: "login_success",
+      userId: user.id,
+      email: user.email,
+    });
+
     return { accessToken, refreshToken, user: safeUser };
   },
 
   async refresh(refreshToken: string) {
-    if (!refreshToken)
-      throw new HttpError(401, "INVALID_CREDENTIALS", "Invalid credentials");
+    if (!refreshToken) {
+      logger.warn({
+        event: "refresh_failed",
+        reason: "NO_TOKEN",
+      });
+
+      throw new HttpError(401, "NO_TOKEN", "Invalid credentials");
+    }
 
     let payload;
 
     try {
       payload = verifyRefreshToken(refreshToken);
     } catch {
+      logger.warn({
+        event: "refresh_failed",
+        reason: "INVALID_TOKEN",
+      });
+
       throw new HttpError(401, "INVALID_TOKEN", "Invalid token");
     }
 
     const refreshTokenDb = await RefreshTokenStorage.findByToken(refreshToken);
 
-    if (!refreshTokenDb)
+    if (!refreshTokenDb) {
+      logger.warn({
+        event: "refresh_failed",
+        reason: "INVALID_TOKEN",
+      });
+
       throw new HttpError(401, "INVALID_TOKEN", "Invalid token");
+    }
 
     const user = await UserStorage.findById(payload.sub);
 
-    if (!user) throw new HttpError(401, "INVALID_TOKEN", "Invalid token");
+    if (!user) {
+      logger.warn({
+        event: "refresh_failed",
+        reason: "INVALID_TOKEN",
+        userId: refreshTokenDb.userId,
+      });
+
+      throw new HttpError(401, "INVALID_TOKEN", "Invalid token");
+    }
 
     await RefreshTokenStorage.deleteByToken(refreshToken);
 
@@ -110,16 +171,43 @@ export const AuthService = {
       expiresAt: refreshExpiresAt,
     });
 
+    logger.info({
+      event: "refresh_success",
+      userId: user.id,
+      email: user.email,
+      name: user.name,
+    });
+
     return { accessToken, refreshToken: newRefreshToken };
   },
 
   async logout(refreshToken: string) {
-    if (!refreshToken)
-      throw new HttpError(401, "INCORRECT_TOKEN", "Wrong token");
+    if (!refreshToken) {
+      logger.warn({
+        event: "logout_failed",
+        reason: "NO_TOKEN",
+      });
+
+      throw new HttpError(401, "NO_TOKEN", "Wrong token");
+    }
 
     const refreshTokenDb = await RefreshTokenStorage.findByToken(refreshToken);
 
-    if (refreshTokenDb) await RefreshTokenStorage.deleteByToken(refreshToken);
+    if (!refreshTokenDb) {
+      logger.warn({
+        event: "logout_failed",
+        reason: "INVALID_TOKEN",
+      });
+
+      throw new HttpError(401, "INVALID_TOKEN", "Invalid token");
+    }
+
+    await RefreshTokenStorage.deleteByToken(refreshToken);
+
+    logger.info({
+      event: "logout_success",
+      userId: refreshTokenDb?.userId,
+    });
 
     return { success: true };
   },
