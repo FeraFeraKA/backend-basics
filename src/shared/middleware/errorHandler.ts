@@ -30,7 +30,7 @@ export function errorHandler(
       code: "VALIDATION_ERROR",
       method: req.method,
       url: req.originalUrl,
-      userId: req.user.id,
+      userId: req.user?.id,
     });
 
     return res.status(400).json({
@@ -47,7 +47,7 @@ export function errorHandler(
       stack: err.stack,
       method: req.method,
       url: req.originalUrl,
-      userId: req.user.id,
+      userId: req.user?.id,
     });
 
     res.status(500).json({
