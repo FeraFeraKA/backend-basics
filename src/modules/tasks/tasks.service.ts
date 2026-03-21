@@ -1,7 +1,7 @@
 import { TaskStorage } from "./tasks.storage.js";
 import type { Task, TaskStatus } from "./tasks.types.js";
 import { HttpError } from "../../shared/errors/httpError.js";
-import type { TasksListQuery } from "./tasks.schema.js";
+import type { TasksListQuery, UpdateTaskInput } from "./tasks.schema.js";
 import type { Prisma } from "@prisma/client";
 
 export const TaskService = {
@@ -59,7 +59,11 @@ export const TaskService = {
     return TaskStorage.create(data);
   },
 
-  async update(id: string, userId: string, data: Partial<Task>): Promise<Task> {
+  async update(id: string, userId: string, data: UpdateTaskInput): Promise<Task> {
+    if (Object.keys(data).length === 0) {
+      throw new HttpError(400, "EMPTY_PATCH", "At least one field is required");
+    }
+
     const task = await TaskStorage.findById(id, userId);
 
     if (!task) throw new HttpError(404, "NOT_FOUND", "Task not found");

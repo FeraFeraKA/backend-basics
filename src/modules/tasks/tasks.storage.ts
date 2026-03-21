@@ -1,6 +1,7 @@
 import type { Task, TaskStatus } from "./tasks.types.js";
 import { prisma } from "../../shared/db/prisma.js";
 import type { Prisma } from "@prisma/client";
+import type { UpdateTaskInput } from "./tasks.schema.js";
 
 export const TaskStorage = {
   async list(
@@ -40,7 +41,7 @@ export const TaskStorage = {
     });
   },
 
-  async update(id: string, data: Partial<Task>): Promise<Task> {
+  async update(id: string, data: UpdateTaskInput): Promise<Task> {
     return prisma.task.update({
       where: { id },
       data,

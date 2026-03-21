@@ -1,6 +1,5 @@
 import express from "express";
 import taskRouter from "./modules/tasks/tasks.routes.js";
-import userRouter from "./modules/users/users.routes.js";
 import {
   errorHandler,
   routeHandler,
@@ -37,8 +36,6 @@ app.use(
 app.use(express.json({ limit: "100kb" }));
 
 app.use("/tasks", taskRouter);
-
-app.use("/users", userRouter);
 
 app.use("/auth", authLimiter, authRouter);
 
