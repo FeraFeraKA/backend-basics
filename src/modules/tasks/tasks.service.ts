@@ -2,12 +2,13 @@ import { TaskStorage } from "./tasks.storage.js";
 import type { Task, TaskStatus } from "./tasks.types.js";
 import { HttpError } from "../../shared/errors/httpError.js";
 import type { TasksListQuery } from "./tasks.schema.js";
+import type { Prisma } from "@prisma/client";
 
 export const TaskService = {
   async list(userId: string, query: TasksListQuery) {
     const { page, limit, status, search, sort, order } = query;
 
-    const where = {
+    const where: Prisma.TaskWhereInput = {
       userId,
       ...(status ? { status } : {}),
       ...(search
@@ -21,7 +22,8 @@ export const TaskService = {
     };
 
     const skip = (page - 1) * limit;
-    const orderBy = {
+
+    const orderBy: Prisma.TaskOrderByWithRelationInput = {
       [sort]: order,
     };
 
