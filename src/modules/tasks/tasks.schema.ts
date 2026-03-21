@@ -13,15 +13,16 @@ export const createTaskSchema = z.object({
 export const updateTaskSchema = createTaskSchema.partial();
 
 export const tasksListQuerySchema = z.object({
-  page: z.coerce.number().min(1, "Count of pages is required"),
+  page: z.coerce.number().min(1, "Count of pages is required").default(1),
   limit: z.coerce
     .number()
     .min(1, "Limit of tasks is required")
-    .max(50, "Limit of tasks must be shorter than 50 tasks per 1 page"),
+    .max(50, "Limit of tasks must be shorter than 50 tasks per 1 page")
+    .default(10),
   status: z.enum([...TASK_STATUSES]).optional(),
   search: z.string().optional(),
-  sort: z.enum([...SORT_OPTIONS]),
-  order: z.enum([...ORDER_OPTIONS]),
+  sort: z.enum([...SORT_OPTIONS]).default("createdAt"),
+  order: z.enum([...ORDER_OPTIONS]).default("desc"),
 });
 
 export type TasksListQuery = z.infer<typeof tasksListQuerySchema>;
