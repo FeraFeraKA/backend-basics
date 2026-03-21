@@ -3,6 +3,16 @@ import type { Task, TaskStatus } from "./tasks.types.js";
 import { HttpError } from "../../shared/errors/httpError.js";
 import type { TasksListQuery, UpdateTaskInput } from "./tasks.schema.js";
 import type { Prisma } from "@prisma/client";
+import z from "zod";
+
+const taskIdSchema = z.uuid();
+
+function ensureTaskId(id: string) {
+  const parsed = taskIdSchema.safeParse(id);
+  if (!parsed.success) {
+    throw new HttpError(404, "NOT_FOUND", "Task not found");
+  }
+}
 
 export const TaskService = {
   async list(userId: string, query: TasksListQuery) {
@@ -43,6 +53,8 @@ export const TaskService = {
   },
 
   async get(id: string, userId: string): Promise<Task> {
+    ensureTaskId(id);
+
     const task = await TaskStorage.findById(id, userId);
 
     if (!task) throw new HttpError(404, "NOT_FOUND", "Task not found");
@@ -60,6 +72,8 @@ export const TaskService = {
   },
 
   async update(id: string, userId: string, data: UpdateTaskInput): Promise<Task> {
+    ensureTaskId(id);
+
     if (Object.keys(data).length === 0) {
       throw new HttpError(400, "EMPTY_PATCH", "At least one field is required");
     }
@@ -72,6 +86,8 @@ export const TaskService = {
   },
 
   async remove(id: string, userId: string): Promise<Task> {
+    ensureTaskId(id);
+
     const task = await TaskStorage.findById(id, userId);
 
     if (!task) throw new HttpError(404, "NOT_FOUND", "Task not found");

@@ -6,7 +6,7 @@ const options: swaggerJsdoc.Options = {
     info: {
       title: "Task API",
       version: "1.0.0",
-      description: "REST API for authentication, users and tasks management",
+      description: "REST API for authentication and task management",
     },
 
     servers: [
@@ -19,7 +19,6 @@ const options: swaggerJsdoc.Options = {
     tags: [
       { name: "Auth", description: "Authentication endpoints" },
       { name: "Tasks", description: "Task management endpoints" },
-      { name: "Users", description: "User endpoints" },
     ],
 
     components: {
@@ -34,7 +33,7 @@ const options: swaggerJsdoc.Options = {
       schemas: {
         SafeUser: {
           type: "object",
-          required: ["id", "email", "createdAt", "updatedAt"],
+          required: ["id", "email", "createdAt"],
           properties: {
             id: {
               type: "string",
@@ -51,11 +50,6 @@ const options: swaggerJsdoc.Options = {
               example: "user@example.com",
             },
             createdAt: {
-              type: "string",
-              format: "date-time",
-              example: "2026-03-15T12:00:00.000Z",
-            },
-            updatedAt: {
               type: "string",
               format: "date-time",
               example: "2026-03-15T12:00:00.000Z",
@@ -244,28 +238,6 @@ const options: swaggerJsdoc.Options = {
               type: "string",
               enum: ["TODO", "DOING", "DONE"],
               example: "DOING",
-            },
-          },
-        },
-
-        CreateUserRequest: {
-          type: "object",
-          required: ["email", "passwordHash"],
-          properties: {
-            email: {
-              type: "string",
-              format: "email",
-              example: "user@example.com",
-            },
-            name: {
-              type: "string",
-              minLength: 1,
-              maxLength: 50,
-              example: "Kolya",
-            },
-            passwordHash: {
-              type: "string",
-              example: "$2b$10$hashedPasswordExample",
             },
           },
         },

@@ -1,5 +1,10 @@
 import z from "zod";
-import { ORDER_OPTIONS, SORT_OPTIONS, TASK_STATUSES, type TaskStatus } from "./tasks.types.js";
+import {
+  ORDER_OPTIONS,
+  SORT_OPTIONS,
+  TASK_STATUSES,
+  type TaskStatus,
+} from "./tasks.types.js";
 
 export const createTaskSchema = z.object({
   title: z
@@ -13,6 +18,8 @@ export const createTaskSchema = z.object({
     .max(2000, "Text must be shorter than 2000 characters"),
   status: z.enum([...TASK_STATUSES]),
 });
+
+export const updateTaskSchema = createTaskSchema.partial();
 
 export type UpdateTaskInput = {
   title?: string;

@@ -38,7 +38,7 @@ router.use(authGuard);
  *         name: status
  *         schema:
  *           type: string
- *           enum: [TODO, IN_PROGRESS, DONE]
+ *           enum: [TODO, DOING, DONE]
  *         description: Filter tasks by status
  *
  *       - in: query
@@ -89,6 +89,9 @@ router.use(authGuard);
  *
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
+ *
+ *       400:
+ *         $ref: '#/components/responses/ValidationError'
  *
  *       500:
  *         $ref: '#/components/responses/InternalError'
@@ -188,7 +191,13 @@ router.get("/:id", TaskController.get);
  *             schema:
  *               $ref: '#/components/schemas/Task'
  *       400:
- *         $ref: '#/components/responses/ValidationError'
+ *         description: Validation error or empty patch body
+ *         content:
+ *           application/json:
+ *             schema:
+ *               oneOf:
+ *                 - $ref: '#/components/schemas/ValidationErrorResponse'
+ *                 - $ref: '#/components/schemas/ErrorResponse'
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
  *       404:
