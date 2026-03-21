@@ -20,7 +20,11 @@ export const tasksListQuerySchema = z.object({
     .max(50, "Limit of tasks must be shorter than 50 tasks per 1 page")
     .default(10),
   status: z.enum([...TASK_STATUSES]).optional(),
-  search: z.string().optional(),
+  search: z
+    .string()
+    .trim()
+    .max(100, "Search query must be shorter than 100 characters")
+    .optional(),
   sort: z.enum([...SORT_OPTIONS]).default("createdAt"),
   order: z.enum([...ORDER_OPTIONS]).default("desc"),
 });

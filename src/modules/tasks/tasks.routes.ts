@@ -10,22 +10,86 @@ router.use(authGuard);
  * @openapi
  * /tasks:
  *   get:
- *     summary: Get all tasks of current user
- *     description: Returns all tasks that belong to the authenticated user
+ *     summary: Get tasks list with pagination, filtering, sorting and search
+ *     description: Returns paginated list of tasks for the authenticated user
  *     tags: [Tasks]
  *     security:
  *       - bearerAuth: []
+ *
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number
+ *
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 50
+ *           default: 10
+ *         description: Number of items per page
+ *
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [TODO, IN_PROGRESS, DONE]
+ *         description: Filter tasks by status
+ *
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search tasks by title (case-insensitive)
+ *
+ *       - in: query
+ *         name: sort
+ *         schema:
+ *           type: string
+ *           enum: [createdAt, updatedAt, title]
+ *           default: createdAt
+ *         description: Field to sort by
+ *
+ *       - in: query
+ *         name: order
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Sort order
+ *
  *     responses:
  *       200:
- *         description: List of tasks
+ *         description: Paginated list of tasks
  *         content:
  *           application/json:
  *             schema:
- *               type: array
- *               items:
- *                 $ref: '#/components/schemas/Task'
+ *               type: object
+ *               properties:
+ *                 items:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Task'
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     total:
+ *                       type: integer
+ *                     totalPages:
+ *                       type: integer
+ *
  *       401:
  *         $ref: '#/components/responses/UnauthorizedError'
+ *
  *       500:
  *         $ref: '#/components/responses/InternalError'
  */
