@@ -1,5 +1,5 @@
 import z from "zod";
-import { TASK_STATUSES } from "./tasks.types.js";
+import { ORDER_OPTIONS, SORT_OPTIONS, TASK_STATUSES } from "./tasks.types.js";
 
 export const createTaskSchema = z.object({
   title: z
@@ -11,3 +11,17 @@ export const createTaskSchema = z.object({
 });
 
 export const updateTaskSchema = createTaskSchema.partial();
+
+export const tasksListQuerySchema = z.object({
+  page: z.coerce.number().min(1, "Count of pages is required"),
+  limit: z.coerce
+    .number()
+    .min(1, "Limit of tasks is required")
+    .max(50, "Limit of tasks must be shorter than 50 tasks per 1 page"),
+  status: z.enum([...TASK_STATUSES]).optional(),
+  search: z.string().optional(),
+  sort: z.enum([...SORT_OPTIONS]),
+  order: z.enum([...ORDER_OPTIONS]),
+});
+
+export type TasksListQuery = z.infer<typeof tasksListQuerySchema>;

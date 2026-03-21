@@ -1,11 +1,16 @@
 import type { Request, Response } from "express";
 import { TaskService } from "./tasks.service.js";
-import { createTaskSchema, updateTaskSchema } from "./tasks.schema.js";
+import {
+  createTaskSchema,
+  tasksListQuerySchema,
+  updateTaskSchema,
+} from "./tasks.schema.js";
 
 export const TaskController = {
   async list(req: Request, res: Response) {
     const userId = req.user.id;
-    const tasks = await TaskService.list(userId);
+    const query = tasksListQuerySchema.parse(req.query);
+    const tasks = await TaskService.list(userId, query);
     res.json(tasks);
   },
 

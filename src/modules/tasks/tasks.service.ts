@@ -1,10 +1,43 @@
 import { TaskStorage } from "./tasks.storage.js";
 import type { Task, TaskStatus } from "./tasks.types.js";
 import { HttpError } from "../../shared/errors/httpError.js";
+import type { TasksListQuery } from "./tasks.schema.js";
 
 export const TaskService = {
-  list(userId: string): Promise<Task[]> {
-    return TaskStorage.list(userId);
+  async list(userId: string, query: TasksListQuery) {
+    const { page, limit, status, search, sort, order } = query;
+
+    const where = {
+      userId,
+      ...(status ? { status } : {}),
+      ...(search
+        ? {
+            title: {
+              contains: search,
+              mode: "insensitive",
+            },
+          }
+        : {}),
+    };
+
+    const skip = (page - 1) * limit;
+    const orderBy = {
+      [sort]: order,
+    };
+
+    const items = await TaskStorage.list(where, skip, limit, orderBy);
+
+    const total = await TaskStorage.count(where);
+
+    return {
+      items,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   },
 
   async get(id: string, userId: string): Promise<Task> {

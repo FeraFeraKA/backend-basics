@@ -2,9 +2,18 @@ import type { Task, TaskStatus } from "./tasks.types.js";
 import { prisma } from "../../shared/db/prisma.js";
 
 export const TaskStorage = {
-  async list(userId: string): Promise<Task[]> {
+  async list(where: object, skip: number, take: number, orderBy: object) {
     return prisma.task.findMany({
-      where: { userId },
+      where,
+      skip,
+      take,
+      orderBy,
+    });
+  },
+
+  async count(where: object) {
+    return prisma.task.count({
+      where,
     });
   },
 
